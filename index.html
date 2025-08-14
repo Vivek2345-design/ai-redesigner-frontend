@@ -1,355 +1,193 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Website Redesigner - Professional</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a092d;
-        }
-        .glassmorphism {
-            background: rgba(255, 255, 255, 0.05);
-            -webkit-backdrop-filter: blur(12px);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .loader {
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-top: 4px solid #6366f1;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        .code-block {
-            background-color: #0f172a;
-            color: #e2e8f0;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            overflow-x: auto;
-            font-family: 'Fira Code', 'Courier New', Courier, monospace;
-            position: relative;
-            min-height: 24rem; /* 384px */
-        }
-        .copy-btn {
-            position: absolute;
-            top: 0.75rem;
-            right: 0.75rem;
-            background-color: #334155;
-            color: #cbd5e1;
-            border: none;
-            padding: 0.25rem 0.75rem;
-            border-radius: 0.375rem;
-            cursor: pointer;
-            font-size: 0.8rem;
-            transition: all 0.2s ease-in-out;
-        }
-        .copy-btn:hover {
-            background-color: #475569;
-            color: #ffffff;
-        }
-        .copy-btn.copied {
-            background-color: #22c55e;
-            color: #ffffff;
-        }
-        .health-score-circle {
-            width: 120px;
-            height: 120px;
-            position: relative;
-        }
-        .health-score-circle svg {
-            width: 100%;
-            height: 100%;
-            transform: rotate(-90deg);
-        }
-        .health-score-circle .circle-bg {
-            fill: none;
-            stroke: rgba(255, 255, 255, 0.1);
-            stroke-width: 10;
-        }
-        .health-score-circle .circle {
-            fill: none;
-            stroke-width: 10;
-            stroke-linecap: round;
-            transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 0.1, 0.25, 1);
-        }
-        #healthRecommendations ul {
-            list-style-position: inside;
-            padding-left: 0.5rem;
-        }
-        #healthRecommendations li {
-            margin-bottom: 0.5rem;
-        }
-    </style>
-</head>
-<body class="bg-gray-900 text-gray-200">
+<script>
+    // --- DOM Elements ---
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const websiteUrlInput = document.getElementById('websiteUrl');
+    const resultsSection = document.getElementById('results');
+    const loader = document.getElementById('loader');
+    const content = document.getElementById('content');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
+    const healthScoreText = document.getElementById('healthScoreText');
+    const healthScoreCircle = document.getElementById('healthScoreCircle');
+    const healthRecommendations = document.getElementById('healthRecommendations');
+    const newHtmlCode = document.getElementById('newHtmlCode');
 
-    <div class="container mx-auto p-4 sm:p-6 md:p-8">
-        <header class="text-center mb-10">
-            <h1 class="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-cyan-400 pb-2">AI Website Redesigner</h1>
-            <p class="text-gray-400 mt-2 max-w-2xl mx-auto">
-                Enter a website URL to simulate how AI can perform a health analysis and generate a modern redesign.
-            </p>
-        </header>
+    // --- Sample Website Data (Simulation) ---
+    const oldWebsiteHTML = `
+        <div style="font-family: 'Times New Roman', serif; background-color: #FFFFCC; padding: 15px; border: 2px solid #000;">
+            <h1 style="color: #0000FF; text-align: center;">Welcome to Dave's Digital Doodads!</h1>
+            <p style="font-size: 14px; color: #333;">We are the PREMIER online shop for all your digital needs. Established in 1998, we have the best widgets and gizmos on the web.</p>
+            <img src="https://placehold.co/400x80/0000FF/FFFFFF?text=Cool+Banner+Ad" alt="A promotional banner">
+            <h2>Our Products</h2>
+            <ul>
+                <li>Super Widget 5000</li>
+                <li>Mega Gizmo Plus</li>
+                <li>Turbo Encabulator</li>
+            </ul>
+            <p>Contact us at: <a href="mailto:dave@example.com">dave@example.com</a></p>
+            <button onclick="alert('Thanks for your interest!')">Click for a Surprise!</button>
+        </div>
+    `;
 
-        <main>
-            <!-- Input Section -->
-            <div class="max-w-3xl mx-auto glassmorphism p-6 rounded-2xl shadow-2xl shadow-indigo-900/20">
-                <div class="flex flex-col sm:flex-row items-center gap-4">
-                    <input type="url" id="websiteUrl" placeholder="https://www.example.com" class="flex-grow w-full sm:w-auto bg-gray-800/50 text-white border border-gray-600 rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition duration-300">
-                    <button id="analyzeBtn" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-cyan-500 hover:from-indigo-600 hover:to-cyan-600 text-white font-semibold py-3 px-8 rounded-lg shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-300 ease-in-out">
-                        Analyze & Redesign
-                    </button>
-                </div>
-                 <p class="text-xs text-center text-gray-500 mt-4">Note: This is a front-end demo. Analysis is performed on a pre-loaded example.</p>
-            </div>
+    // --- Gemini API Call Function ---
+    async function callGemini(prompt, isJson = false) {
+        const apiKey = ""; // Canvas will provide the key
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
 
-            <!-- Results Section -->
-            <div id="results" class="mt-12 hidden">
-                <!-- Loading Indicator -->
-                <div id="loader" class="flex flex-col items-center justify-center my-16">
-                    <div class="loader"></div>
-                    <p class="mt-4 text-gray-400 tracking-wide">AI is analyzing and redesigning... Please wait.</p>
-                </div>
+        const payload = {
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: isJson ? { responseMimeType: "application/json" } : {}
+        };
 
-                <!-- Content Display -->
-                <div id="content" class="hidden animate-fade-in">
-                    <!-- Website Health Section -->
-                    <div class="mb-10">
-                        <h2 class="text-3xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400">Website Health Analysis</h2>
-                        <div class="glassmorphism p-6 sm:p-8 rounded-2xl shadow-lg flex flex-col md:flex-row items-center gap-8">
-                            <div class="health-score-circle flex-shrink-0">
-                                <svg>
-                                    <circle class="circle-bg" cx="60" cy="60" r="54"></circle>
-                                    <circle id="healthScoreCircle" class="circle" cx="60" cy="60" r="54"></circle>
-                                </svg>
-                                <div id="healthScoreText" class="absolute inset-0 flex items-center justify-center text-4xl font-bold text-white">0</div>
-                            </div>
-                            <div id="healthRecommendations" class="flex-1 text-gray-300">
-                                <!-- Recommendations will be injected here -->
-                            </div>
-                        </div>
-                    </div>
+        try {
+            const response = await fetch(https://member-portal-backend-f1p2.onrender.com, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
 
-                    <!-- Redesign Section -->
-                    <div>
-                        <h2 class="text-3xl font-bold text-center mb-6 text-transparent bg-clip-text bg-gradient-to-r from-gray-200 to-gray-400">AI-Powered Redesign</h2>
-                        <div class="grid grid-cols-1 gap-8">
-                            <!-- New HTML -->
-                            <div class="glassmorphism p-6 rounded-2xl shadow-lg">
-                                <h3 class="text-xl font-semibold mb-4 text-white">Generated HTML</h3>
-                                <div class="code-block">
-                                    <button class="copy-btn" onclick="copyCode(this, 'newHtmlCode')">Copy</button>
-                                    <pre><code id="newHtmlCode" class="language-html"></code></pre>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Error Message Box -->
-            <div id="errorBox" class="hidden mt-8 max-w-3xl mx-auto bg-red-900/50 border border-red-700 text-red-300 px-4 py-3 rounded-lg relative" role="alert">
-                <strong class="font-bold">Analysis Failed:</strong>
-                <span class="block sm:inline ml-2" id="errorMessage"></span>
-            </div>
-        </main>
-    </div>
-
-    <script>
-        // --- DOM Elements ---
-        const analyzeBtn = document.getElementById('analyzeBtn');
-        const websiteUrlInput = document.getElementById('websiteUrl');
-        const resultsSection = document.getElementById('results');
-        const loader = document.getElementById('loader');
-        const content = document.getElementById('content');
-        const errorBox = document.getElementById('errorBox');
-        const errorMessage = document.getElementById('errorMessage');
-        const healthScoreText = document.getElementById('healthScoreText');
-        const healthScoreCircle = document.getElementById('healthScoreCircle');
-        const healthRecommendations = document.getElementById('healthRecommendations');
-        const newHtmlCode = document.getElementById('newHtmlCode');
-        
-        // --- Sample Website Data (Simulation) ---
-        const oldWebsiteHTML = `
-            <div style="font-family: 'Times New Roman', serif; background-color: #FFFFCC; padding: 15px; border: 2px solid #000;">
-                <h1 style="color: #0000FF; text-align: center;">Welcome to Dave's Digital Doodads!</h1>
-                <p style="font-size: 14px; color: #333;">We are the PREMIER online shop for all your digital needs. Established in 1998, we have the best widgets and gizmos on the web.</p>
-                <img src="https://placehold.co/400x80/0000FF/FFFFFF?text=Cool+Banner+Ad" alt="A promotional banner">
-                <h2>Our Products</h2>
-                <ul>
-                    <li>Super Widget 5000</li>
-                    <li>Mega Gizmo Plus</li>
-                    <li>Turbo Encabulator</li>
-                </ul>
-                <p>Contact us at: <a href="mailto:dave@example.com">dave@example.com</a></p>
-                <button onclick="alert('Thanks for your interest!')">Click for a Surprise!</button>
-            </div>
-        `;
-
-        // --- Gemini API Call Function ---
-        async function callGemini(prompt, isJson = false) {
-            const apiKey = ""; // Canvas will provide the key
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key=${apiKey}`;
-            
-            const payload = {
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: isJson ? { responseMimeType: "application/json" } : {}
-            };
-
-            try {
-                const response = await fetch(https://member-portal-backend-f1p2.onrender.com, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                if (!response.ok) {
-                    const errorBody = await response.json();
-                    throw new Error(`API Error: ${response.status} - ${errorBody?.error?.message || 'Unknown error'}`);
-                }
-
-                const result = await response.json();
-                
-                const part = result?.candidates?.[0]?.content?.parts?.[0];
-                if (part?.text) {
-                    return part.text;
-                } else {
-                    const blockReason = result?.promptFeedback?.blockReason;
-                    if (blockReason) {
-                        throw new Error(`Request was blocked: ${blockReason}. Please adjust the prompt.`);
-                    }
-                    throw new Error("The AI model returned an empty or invalid response.");
-                }
-            } catch (error) {
-                console.error("Gemini API call failed:", error);
-                showError(error.message);
-                throw error;
+            if (!response.ok) {
+                const errorBody = await response.json();
+                throw new Error(`API Error: ${response.status} - ${errorBody?.error?.message || 'Unknown error'}`);
             }
+
+            const result = await response.json();
+
+            const part = result?.candidates?.[0]?.content?.parts?.[0];
+            if (part?.text) {
+                return part.text;
+            } else {
+                const blockReason = result?.promptFeedback?.blockReason;
+                if (blockReason) {
+                    throw new Error(`Request was blocked: ${blockReason}. Please adjust the prompt.`);
+                }
+                throw new Error("The AI model returned an empty or invalid response.");
+            }
+        } catch (error) {
+            console.error("Gemini API call failed:", error);
+            showError(error.message);
+            throw error;
+        }
+    }
+
+    // --- Main Logic ---
+    analyzeBtn.addEventListener('click', async () => {
+        if (!websiteUrlInput.value.trim()) {
+            showError("Please enter a URL to begin the simulation.");
+            websiteUrlInput.focus();
+            return;
         }
 
-        // --- Main Logic ---
-        analyzeBtn.addEventListener('click', async () => {
-            // Basic validation for the input field to enhance the simulation
-            if (!websiteUrlInput.value.trim()) {
-                showError("Please enter a URL to begin the simulation.");
-                websiteUrlInput.focus();
-                return;
-            }
-            
+        resultsSection.style.display = 'block';
+        content.style.display = 'none';
+        loader.style.display = 'flex';
+        errorBox.style.display = 'none';
+
+        try {
+            const healthPrompt = `
+                Analyze the following HTML code for website health. Focus on performance, modern accessibility (WCAG), and basic SEO.
+                Provide a score from 0 to 100.
+                Then, provide a brief summary and 3-5 key recommendations in markdown format.
+                Do not suggest using a different framework. The output must be a valid JSON object with two keys: "score" (a number) and "recommendations" (a markdown string).
+
+                HTML to analyze:
+                \`\`\`html
+                ${oldWebsiteHTML}
+                \`\`\`
+            `;
+            const healthResponse = await callGemini(healthPrompt, true);
+            const healthData = JSON.parse(healthResponse);
+            displayHealthAnalysis(healthData.score, healthData.recommendations);
+
+            const redesignPrompt = `
+                You are an expert web designer. Redesign the following HTML code to give it a modern, professional, and fully responsive look.
+                - Use Tailwind CSS classes directly in the HTML for all styling.
+                - Do not use any inline 'style' attributes.
+                - Use a clean, centered layout with a professional color palette (e.g., shades of gray, indigo, cyan).
+                - Improve typography with a sans-serif font like Inter.
+                - Make interactive elements like buttons and links look modern and engaging.
+                - Ensure the image is responsive.
+                - Replace the 'alert()' in the button with a simple 'console.log("Button clicked!")'.
+                - Do not add, remove, or change the text content, list items, or links. Only focus on the design and structure.
+                The output must be a valid JSON object with one key: "newHtml".
+
+                Old HTML:
+                \`\`\`html
+                ${oldWebsiteHTML}
+                \`\`\`
+            `;
+            const redesignResponse = await callGemini(redesignPrompt, true);
+            const redesignData = JSON.parse(redesignResponse);
+            displayRedesign(redesignData.newHtml);
+
+            loader.style.display = 'none';
+            content.style.display = 'block';
+
+        } catch (error) {
+            loader.style.display = 'none';
             resultsSection.style.display = 'block';
-            content.style.display = 'none';
-            loader.style.display = 'flex';
-            errorBox.style.display = 'none';
+        }
+    });
 
-            try {
-                // --- Step 1: Analyze Website Health ---
-                // In a real app, you would fetch the content of websiteUrlInput.value here.
-                // For this demo, we use the pre-loaded HTML.
-                const healthPrompt = `
-                    Analyze the following HTML code for website health. Focus on performance, modern accessibility (WCAG), and basic SEO.
-                    Provide a score from 0 to 100.
-                    Then, provide a brief summary and 3-5 key recommendations in markdown format.
-                    Do not suggest using a different framework. The output must be a valid JSON object with two keys: "score" (a number) and "recommendations" (a markdown string).
-
-                    HTML to analyze:
-                    \`\`\`html
-                    ${oldWebsiteHTML}
-                    \`\`\`
-                `;
-                const healthResponse = await callGemini(healthPrompt, true);
-                const healthData = JSON.parse(healthResponse);
-                displayHealthAnalysis(healthData.score, healthData.recommendations);
-
-                // --- Step 2: Redesign Website ---
-                const redesignPrompt = `
-                    You are an expert web designer. Redesign the following HTML code to give it a modern, professional, and fully responsive look.
-                    - Use Tailwind CSS classes directly in the HTML for all styling.
-                    - Do not use any inline 'style' attributes.
-                    - Use a clean, centered layout with a professional color palette (e.g., shades of gray, indigo, cyan).
-                    - Improve typography with a sans-serif font like Inter.
-                    - Make interactive elements like buttons and links look modern and engaging.
-                    - Ensure the image is responsive.
-                    - Replace the 'alert()' in the button with a simple 'console.log("Button clicked!")'.
-                    - Do not add, remove, or change the text content, list items, or links. Only focus on the design and structure.
-                    The output must be a valid JSON object with one key: "newHtml".
-
-                    Old HTML:
-                    \`\`\`html
-                    ${oldWebsiteHTML}
-                    \`\`\`
-                `;
-                const redesignResponse = await callGemini(redesignPrompt, true);
-                const redesignData = JSON.parse(redesignResponse);
-                displayRedesign(redesignData.newHtml);
-
-                // --- Step 3: Show Content ---
-                loader.style.display = 'none';
-                content.style.display = 'block';
-
-            } catch (error) {
-                loader.style.display = 'none';
-                resultsSection.style.display = 'block';
+    // --- UI Display Functions ---
+    function displayHealthAnalysis(score, recommendations) {
+        let currentScore = 0;
+        const interval = setInterval(() => {
+            if (currentScore >= score) {
+                clearInterval(interval);
+                currentScore = score;
             }
-        });
+            healthScoreText.textContent = currentScore;
+            currentScore++;
+        }, 15);
 
-        // --- UI Display Functions ---
-        function displayHealthAnalysis(score, recommendations) {
-            // Animate score text
-            let currentScore = 0;
-            const interval = setInterval(() => {
-                if (currentScore >= score) {
-                    clearInterval(interval);
-                    currentScore = score;
-                }
-                healthScoreText.textContent = currentScore;
-                currentScore++;
-            }, 15);
+        const radius = healthScoreCircle.r.baseVal.value;
+        const circumference = 2 * Math.PI * radius;
+        const offset = circumference - (score / 100) * circumference;
+        healthScoreCircle.style.strokeDasharray = `${circumference} ${circumference}`;
+        healthScoreCircle.style.strokeDashoffset = circumference;
+        setTimeout(() => {
+            healthScoreCircle.style.strokeDashoffset = offset;
+        }, 100);
 
-            // Update circle progress bar
-            const radius = healthScoreCircle.r.baseVal.value;
-            const circumference = 2 * Math.PI * radius;
-            const offset = circumference - (score / 100) * circumference;
-            healthScoreCircle.style.strokeDasharray = `${circumference} ${circumference}`;
-            healthScoreCircle.style.strokeDashoffset = circumference;
-            setTimeout(() => {
-                healthScoreCircle.style.strokeDashoffset = offset;
-            }, 100);
-
-            // Set circle color based on score
-            let strokeColor = '#22c55e'; // green-500
-            if (score < 50) strokeColor = '#ef4444'; // red-500
-            else if (score < 80) strokeColor = '#eab308'; // yellow-500
-            healthScoreCircle.style.stroke = strokeColor;
-            
-            // Render markdown recommendations
-            healthRecommendations.innerHTML = marked.parse(recommendations);
-        }
-
-        function displayRedesign(html) {
-            // Display the code
-            newHtmlCode.textContent = html;
-        }
+        let strokeColor = '#22c55e';
+        if (score < 50) strokeColor = '#ef4444';
+        else if (score < 80) strokeColor = '#eab308';
+        healthScoreCircle.style.stroke = strokeColor;
         
-        function showError(message) {
-            errorMessage.textContent = message;
-            errorBox.style.display = 'block';
-        }
+        healthRecommendations.innerHTML = marked.parse(recommendations);
+    }
 
-        function copyCode(button, elementId) {
-            const codeEl = document.getElementById(elementId);
-            const textToCopy = codeEl.textContent;
-            
-            navigator.clipboard.writeText(textToCopy).then(() => {
+    function displayRedesign(html) {
+        newHtmlCode.textContent = html;
+    }
+    
+    function showError(message) {
+        errorMessage.textContent = message;
+        errorBox.style.display = 'block';
+    }
+
+    function copyCode(button, elementId) {
+        const codeEl = document.getElementById(elementId);
+        const textToCopy = codeEl.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(() => {
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.classList.remove('copied');
+            }, 2000);
+        }).catch(err => {
+            console.error('Failed to copy text: ', err);
+            const textArea = document.createElement('textarea');
+            textArea.value = textToCopy;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
                 const originalText = button.textContent;
                 button.textContent = 'Copied!';
                 button.classList.add('copied');
@@ -357,29 +195,10 @@
                     button.textContent = originalText;
                     button.classList.remove('copied');
                 }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-                // Fallback for older browsers
-                const textArea = document.createElement('textarea');
-                textArea.value = textToCopy;
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                try {
-                    document.execCommand('copy');
-                    const originalText = button.textContent;
-                    button.textContent = 'Copied!';
-                    button.classList.add('copied');
-                    setTimeout(() => {
-                        button.textContent = originalText;
-                        button.classList.remove('copied');
-                    }, 2000);
-                } catch (err) {
-                    alert('Failed to copy code.');
-                }
-                document.body.removeChild(textArea);
-            });
-        }
-    </script>
-</body>
-</html>
+            } catch (err) {
+                alert('Failed to copy code.');
+            }
+            document.body.removeChild(textArea);
+        });
+    }
+</script>
